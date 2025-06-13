@@ -2,234 +2,161 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Генератор сказки</title>
   <style>
     body {
-      margin: 0;
+      background: #0d1b2a;
+      color: #e0e1dd;
       font-family: sans-serif;
-      background: #0a0a1a;
-      color: #eee;
+      margin: 0;
+      padding: 20px;
     }
-    header {
-      background: #003366;
-      padding: 1em;
-      text-align: center;
-      font-size: 1.8em;
-      color: #fff;
-      box-shadow: 0 2px 5px #000;
+    h1 {
+      color: #00b4d8;
     }
-    main {
-      padding: 1em;
-      max-width: 800px;
-      margin: auto;
-    }
-    button {
-      padding: 0.6em 1.2em;
-      margin: 0.5em;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      background: #0055aa;
-      color: #fff;
-      font-size: 1em;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: #0077cc;
-    }
-    .section {
-      display: none;
-      margin-top: 1em;
-    }
-    #paper {
-      background: #fff;
+    .button {
+      background: #00b4d8;
       color: #000;
-      padding: 1em;
-      border-radius: 10px;
-      min-height: 200px;
-      max-height: 300px;
-      overflow-y: auto;
-      box-shadow: 0 0 10px #0055aa88;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
     }
-    .number {
-      color: red;
-      font-weight: bold;
-    }
-    .input-field {
-      display: block;
-      margin: 0.5em 0;
-      padding: 0.5em;
-      width: 100%;
-      border: 1px solid #444;
-      border-radius: 4px;
-      background: #111;
-      color: #eee;
-    }
-    label {
-      display: block;
-      margin: 0.5em 0 0.2em;
-    }
-    .setting-group {
-      margin-bottom: 1em;
+    .button:hover {
+      background: #0077b6;
+      color: #fff;
     }
     textarea {
+      background: #1b263b;
+      color: #e0e1dd;
+      border: 1px solid #415a77;
+      border-radius: 5px;
+      padding: 5px;
+      width: 100%;
       resize: vertical;
+    }
+    input[type="text"], input[type="color"], input[type="number"] {
+      background: #1b263b;
+      color: #e0e1dd;
+      border: 1px solid #415a77;
+      border-radius: 5px;
+      padding: 5px;
+    }
+    #codeContainer {
+      margin-top: 10px;
+      display: none;
     }
   </style>
 </head>
 <body>
-  <header>Генератор сказки</header>
-  <main>
-    <div id="menu" class="section" style="display:block">
-      <button onclick="startEditor()">Создать сказку</button>
-      <button onclick="loadStory()">Загрузить сказку</button>
-    </div>
+  <h1>Генератор сказки 📝</h1>
 
-    <div class="section editor">
-      <div id="paper" onclick="editElement(event)"></div>
-      <button onclick="addText()">Добавить текст</button>
-      <button onclick="addNumber()">Добавить число</button>
-      <button onclick="toQuestions()">Дальше</button>
-    </div>
+  <div id="storyBuilder">
+    <button class="button" onclick="addText()">Добавить текст</button>
+    <button class="button" onclick="addNumber()">Добавить число</button>
+    <div id="storyParts"></div>
+    <button class="button" onclick="nextStep()">Дальше</button>
+  </div>
 
-    <div class="section question-setup">
-      <h3>Введите вопросы для переменных</h3>
-      <div id="questions"></div>
-      <button onclick="backToEditor()">Назад</button>
-      <button onclick="toSettings()">Дальше</button>
-    </div>
+  <div id="questionBuilder" style="display:none;">
+    <h2>Введите вопросы для чисел</h2>
+    <div id="questions"></div>
+    <button class="button" onclick="backToStory()">Назад</button>
+    <button class="button" onclick="showSettings()">Дальше</button>
+  </div>
 
-    <div class="section settings">
-      <h3>Настройки сказки</h3>
-      <div class="setting-group">
-        <label><input type="checkbox" id="randomOrder"> Вопросы в случайном порядке</label>
-        <small>Если включено — порядок вопросов будет случайным при прохождении.</small>
-      </div>
-      <div class="setting-group">
-        <label>Фон (hex)</label>
-        <input class="input-field" id="bgColor" placeholder="#000000" value="#000000" />
-        <small>Цвет фона страницы во время презентации.</small>
-      </div>
-      <div class="setting-group">
-        <label>Цвет листка (hex)</label>
-        <input class="input-field" id="paperColor" placeholder="#ffffff" value="#ffffff" />
-        <small>Цвет листа бумаги со сказкой.</small>
-      </div>
-      <div class="setting-group">
-        <label>Цвет текста (hex)</label>
-        <input class="input-field" id="textColor" placeholder="#000000" value="#000000" />
-        <small>Цвет текста на листе бумаги.</small>
-      </div>
-      <div class="setting-group">
-        <label>Ваш ник</label>
-        <input class="input-field" id="nickname" placeholder="Введите ваш ник" />
-        <small>От кого создана эта сказка.</small>
-      </div>
-      <div class="setting-group">
-        <label>Описание</label>
-        <textarea class="input-field" id="description" placeholder="Описание (необязательно)"></textarea>
-      </div>
-      <button onclick="generateCode()">Готово — получить код</button>
-    </div>
+  <div id="settings" style="display:none;">
+    <h2>Настройки</h2>
+    <label><input type="checkbox" id="randomOrder" /> Вопросы в случайном порядке</label><br/>
+    <label>Фон (hex): <input type="color" id="bgColor" value="#000000"></label><br/>
+    <label>Цвет листа (hex): <input type="color" id="paperColor" value="#ffffff"></label><br/>
+    <label>Цвет текста (hex): <input type="color" id="textColor" value="#000000"></label><br/>
+    <label>Ваш ник: <input type="text" id="nickname" placeholder="Введите ваш ник"></label><br/>
+    <label>Описание (опционально): <input type="text" id="description" placeholder="Описание сказки"></label><br/>
+    <button class="button" onclick="generateCode()">Готово — получить код</button>
+  </div>
 
-    <div class="section presentation">
-      <h3 id="presentNickname"></h3>
-      <p id="presentDescription"></p>
-      <div id="presentPaper" style="padding:1em; border-radius:10px;"></div>
-    </div>
-  </main>
+  <div id="codeContainer">
+    <textarea id="finalCode" rows="5" readonly></textarea>
+    <button class="button" onclick="copyCode()">Скопировать код</button>
+  </div>
 
   <script>
     let storyParts = [];
-    let numbers = [];
-    let questions = {};
-
-    function startEditor() {
-      document.getElementById('menu').style.display = 'none';
-      document.querySelector('.editor').style.display = 'block';
-    }
-
-    function loadStory() {
-      const code = prompt("Вставьте код сказки:");
-      if (code) {
-        try {
-          const data = JSON.parse(atob(code));
-          runTest(data);
-        } catch {
-          alert("Неверный код!");
-        }
-      }
-    }
+    let questions = [];
 
     function addText() {
-      const text = prompt("Введите текст:");
+      const text = prompt("Введите текст");
       if (text) {
-        storyParts.push({ type: "text", value: text });
-        renderStory();
+        storyParts.push({type: 'text', value: text});
+        updateStoryParts();
       }
     }
 
     function addNumber() {
-      const num = numbers.length + 1;
-      storyParts.push({ type: "number", value: num });
-      numbers.push(num);
-      renderStory();
-    }
-
-    function renderStory() {
-      const paper = document.getElementById("paper");
-      paper.innerHTML = storyParts.map(part => {
-        if (part.type === "text") {
-          return `<span>${part.value}</span>`;
-        } else {
-          return `<span class="number">{${part.value}}</span>`;
-        }
-      }).join(" ");
-    }
-
-    function editElement(event) {
-      if (event.target.tagName === "SPAN") {
-        const oldText = event.target.textContent;
-        const newText = prompt("Измените текст:", oldText);
-        if (newText !== null) {
-          for (let part of storyParts) {
-            if (part.type === "text" && part.value === oldText) {
-              part.value = newText;
-              break;
-            }
-          }
-          renderStory();
-        }
+      const number = prompt("Введите число без пробелов");
+      if (number && !number.includes(' ')) {
+        storyParts.push({type: 'number', value: number});
+        updateStoryParts();
+      } else {
+        alert("Число не должно содержать пробелов!");
       }
     }
 
-    function toQuestions() {
-      document.querySelector('.editor').style.display = 'none';
-      document.querySelector('.question-setup').style.display = 'block';
-      const qDiv = document.getElementById('questions');
-      qDiv.innerHTML = '';
-      numbers.forEach(num => {
-        qDiv.innerHTML += `<label>Вопрос для {${num}}<input class="input-field" id="q${num}" placeholder="Введите вопрос"></label>`;
+    function updateStoryParts() {
+      const container = document.getElementById("storyParts");
+      container.innerHTML = '';
+      storyParts.forEach((part, index) => {
+        const el = document.createElement("div");
+        el.innerHTML = part.type === 'text' ? 
+          `<span style="color:#00b4d8;">[Текст]</span> ${part.value}` :
+          `<span style="color:red;">[Число]</span> ${part.value}`;
+        el.style.cursor = 'pointer';
+        el.onclick = () => editPart(index);
+        container.appendChild(el);
       });
     }
 
-    function backToEditor() {
-      document.querySelector('.question-setup').style.display = 'none';
-      document.querySelector('.editor').style.display = 'block';
-    }
-
-    function toSettings() {
-      numbers.forEach(num => {
-        const qVal = document.getElementById(`q${num}`).value;
-        if (!qVal) {
-          alert(`Заполните вопрос для {${num}}`);
-          throw new Error("Не все вопросы заполнены");
+    function editPart(index) {
+      const part = storyParts[index];
+      const newValue = prompt("Измените значение", part.value);
+      if (newValue) {
+        if (part.type === 'number' && newValue.includes(' ')) {
+          alert("Число не должно содержать пробелов!");
+          return;
         }
-        questions[num] = qVal;
+        part.value = newValue;
+        updateStoryParts();
+      }
+    }
+
+    function nextStep() {
+      questions = [];
+      const container = document.getElementById("questions");
+      container.innerHTML = '';
+      storyParts.filter(p => p.type === 'number').forEach((p) => {
+        const div = document.createElement("div");
+        div.innerHTML = `<label>Вопрос для числа <b>${p.value}</b>: <input type="text" /></label>`;
+        container.appendChild(div);
+        questions.push({num: p.value, question: ''});
       });
-      document.querySelector('.question-setup').style.display = 'none';
-      document.querySelector('.settings').style.display = 'block';
+      document.getElementById("storyBuilder").style.display = "none";
+      document.getElementById("questionBuilder").style.display = "block";
+    }
+
+    function backToStory() {
+      document.getElementById("questionBuilder").style.display = "none";
+      document.getElementById("storyBuilder").style.display = "block";
+    }
+
+    function showSettings() {
+      const inputs = document.querySelectorAll("#questions input");
+      inputs.forEach((input, i) => {
+        questions[i].question = input.value || `Вопрос для ${questions[i].num}`;
+      });
+      document.getElementById("questionBuilder").style.display = "none";
+      document.getElementById("settings").style.display = "block";
     }
 
     function generateCode() {
@@ -237,57 +164,25 @@
         storyParts,
         questions,
         settings: {
-          randomOrder: document.getElementById('randomOrder').checked,
-          bgColor: document.getElementById('bgColor').value,
-          paperColor: document.getElementById('paperColor').value,
-          textColor: document.getElementById('textColor').value,
-          nickname: document.getElementById('nickname').value,
-          description: document.getElementById('description').value
+          randomOrder: document.getElementById("randomOrder").checked,
+          bgColor: document.getElementById("bgColor").value,
+          paperColor: document.getElementById("paperColor").value,
+          textColor: document.getElementById("textColor").value,
+          nickname: document.getElementById("nickname").value,
+          description: document.getElementById("description").value
         }
       };
-      const code = btoa(JSON.stringify(data));
-      alert("Ваш код сохранения:\n" + code);
+      const jsonString = JSON.stringify(data);
+      const code = btoa(unescape(encodeURIComponent(jsonString)));
+      document.getElementById("finalCode").value = code;
+      document.getElementById("codeContainer").style.display = "block";
     }
 
-    function runTest(data) {
-      document.getElementById('menu').style.display = 'none';
-      const presentation = document.querySelector('.presentation');
-      presentation.style.display = 'block';
-      document.body.style.background = data.settings.bgColor;
-      const paper = document.getElementById('presentPaper');
-      paper.style.background = data.settings.paperColor;
-      paper.style.color = data.settings.textColor;
-      document.getElementById('presentNickname').textContent = data.settings.nickname || "";
-      document.getElementById('presentDescription').textContent = data.settings.description || "";
-
-      let answers = {};
-      let qNumbers = Object.keys(data.questions);
-      if (data.settings.randomOrder) {
-        qNumbers = qNumbers.sort(() => Math.random() - 0.5);
-      }
-
-      function askNext(index) {
-        if (index >= qNumbers.length) {
-          showStory();
-          return;
-        }
-        const qNum = qNumbers[index];
-        const answer = prompt(data.questions[qNum]);
-        answers[qNum] = answer;
-        askNext(index + 1);
-      }
-
-      function showStory() {
-        paper.innerHTML = data.storyParts.map(part => {
-          if (part.type === "text") {
-            return `<span>${part.value}</span>`;
-          } else {
-            return `<span class="number">${answers[part.value]}</span>`;
-          }
-        }).join(" ");
-      }
-
-      askNext(0);
+    function copyCode() {
+      const textarea = document.getElementById("finalCode");
+      textarea.select();
+      document.execCommand("copy");
+      alert("Код скопирован!");
     }
   </script>
 </body>
