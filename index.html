@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Прикольная сказка</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 600px;
+      transition: all 0.5s ease;
+    }
+    .question {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.7rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      background: #0077ff;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #005fcc;
+    }
+    .story {
+      max-height: 400px;
+      overflow-y: auto;
+      background: #fafafa;
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      line-height: 1.6;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    }
+    .fade {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .fade.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="questionBox" class="fade"></div>
+  </div>
+
+  <script>
+    const questions = [
+      { key: 1, text: "Где ты проводишь большую часть времени?" },
+      { key: 2, text: "Любое транспортное средство." },
+      { key: 3, text: "Хороший и знакомый человек." },
+      { key: 4, text: "Какой может быть ребенок?" },
+      { key: 5, text: "Что интересного можно делать вдвоём?" },
+      { key: 6, text: "Что плохого можно сделать у заправки?" },
+      { key: 7, text: "Что с тобой может сделать человек, которого ты знаешь уже долгое время?" },
+      { key: 8, text: "Как бы тебе было, если бы тебя сбросили с небоскреба?" },
+      { key: 9, text: "Предмет, которым пользуешься регулярно." },
+      { key: 11, text: "Что можно найти в подвале?" },
+      { key: 12, text: "Как бы ты себя чувствовал, если бы ты наступил на гвоздь босыми ногами?" },
+      { key: 13, text: "Что можно сделать, чтобы человеку стало легче?" },
+      { key: 14, text: "Если бы ты болел опасной болезнью, а потом вылечился, тебе бы стало..?" },
+      { key: 15, text: "Назови существо, которое обитает только за гаражами и все его боятся?" },
+      { key: 16, text: "Что плохого тебе может дать прохожий?" },
+      { key: 17, text: "Назови любое место, где можно полежать." },
+      { key: 18, text: "Кто может сделать добро?" },
+      { key: 19, text: "Что может сделать друг?" },
+      { key: 20, text: "Что может сделать незнакомец с 5 шприцами?" }
+    ];
+
+    let answers = {};
+    let current = 0;
+
+    const box = document.getElementById('questionBox');
+
+    function showQuestion() {
+      if (current >= questions.length) {
+        showStory();
+        return;
+      }
+      const q = questions[current];
+      box.innerHTML = `
+        <div class="question">${q.text}</div>
+        <input type="text" id="answer" autofocus />
+        <button onclick="saveAnswer()">Подтвердить</button>
+      `;
+      requestAnimationFrame(() => box.classList.add('show'));
+    }
+
+    function saveAnswer() {
+      const input = document.getElementById('answer');
+      if (!input.value.trim()) return;
+      answers[questions[current].key] = input.value.trim();
+      box.classList.remove('show');
+      current++;
+      setTimeout(showQuestion, 300);
+    }
+
+    function showStory() {
+      const s = answers;
+      box.innerHTML = `
+        <div class="story">
+          Короче, вот причина, как я опоздал в ${s[1]}. Я выходил из транспортного средства под названием ${s[2]}, пока не наткнулся на ${s[3]}. 
+          Этот человек был ${s[4]} и хотел ${s[5]} со мной. 
+          Понятное дело, я согласился. Сначала я решил ${s[6]}, но человеку это не понравилось. 
+          Он решил меня ${s[7]}. Было ${s[8]}, но я убежал. 
+          В итоге я сел на ${s[9]}, но когда прибыл в ${s[1]}, я упал на ${s[11]}, и мне было очень ${s[12]}. 
+          В итоге подошла женщина, чтобы помочь. Мы вместе решили ${s[13]}, и стало ${s[14]}. 
+          Когда я наконец подошел к двери, на меня напал ${s[15]}, а потом я получил ${s[16]} и отключился. 
+          Проснулся я в ${s[17]}, где за мной ухаживал человек - ${s[18]}, который в конце концов ${s[19]} и ${s[20]} меня.
+        </div>
+      `;
+      box.classList.add('show');
+    }
+
+    // Перемешаем вопросы, чтобы порядок был случайным (но key останется)
+    questions.sort(() => Math.random() - 0.5);
+
+    showQuestion();
+  </script>
+</body>
+</html>
