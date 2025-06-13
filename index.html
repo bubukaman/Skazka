@@ -5,80 +5,55 @@
   <title>Генератор сказки</title>
   <style>
     body {
-      background: #0d1b2a;
-      color: #e0e1dd;
+      background: #000;
+      color: #fff;
       font-family: sans-serif;
-      margin: 0;
       padding: 20px;
     }
-    h1 {
-      color: #00b4d8;
-    }
     .button {
-      background: #00b4d8;
-      color: #000;
-      border: none;
-      padding: 10px 20px;
+      padding: 10px;
       margin: 5px;
-      border-radius: 5px;
+      background: #00b4d8;
+      border: none;
+      color: #000;
       cursor: pointer;
-    }
-    .button:hover {
-      background: #0077b6;
-      color: #fff;
+      border-radius: 4px;
     }
     textarea {
-      background: #1b263b;
-      color: #e0e1dd;
-      border: 1px solid #415a77;
-      border-radius: 5px;
-      padding: 5px;
       width: 100%;
-      resize: vertical;
-    }
-    input[type="text"], input[type="color"], input[type="number"] {
-      background: #1b263b;
-      color: #e0e1dd;
-      border: 1px solid #415a77;
-      border-radius: 5px;
       padding: 5px;
-    }
-    #codeContainer {
-      margin-top: 10px;
-      display: none;
+      background: #222;
+      color: #0f0;
+      border: 1px solid #555;
     }
   </style>
 </head>
 <body>
-  <h1>Генератор сказки 📝</h1>
+  <h1>Генератор сказки</h1>
+  <button class="button" onclick="addText()">Добавить текст</button>
+  <button class="button" onclick="addNumber()">Добавить число</button>
+  <div id="storyParts"></div>
+  <button class="button" onclick="nextStep()">Дальше</button>
 
-  <div id="storyBuilder">
-    <button class="button" onclick="addText()">Добавить текст</button>
-    <button class="button" onclick="addNumber()">Добавить число</button>
-    <div id="storyParts"></div>
-    <button class="button" onclick="nextStep()">Дальше</button>
-  </div>
-
-  <div id="questionBuilder" style="display:none;">
-    <h2>Введите вопросы для чисел</h2>
+  <div id="questionsContainer" style="display:none;">
+    <h2>Введите вопросы</h2>
     <div id="questions"></div>
-    <button class="button" onclick="backToStory()">Назад</button>
     <button class="button" onclick="showSettings()">Дальше</button>
   </div>
 
-  <div id="settings" style="display:none;">
+  <div id="settingsContainer" style="display:none;">
     <h2>Настройки</h2>
-    <label><input type="checkbox" id="randomOrder" /> Вопросы в случайном порядке</label><br/>
-    <label>Фон (hex): <input type="color" id="bgColor" value="#000000"></label><br/>
-    <label>Цвет листа (hex): <input type="color" id="paperColor" value="#ffffff"></label><br/>
-    <label>Цвет текста (hex): <input type="color" id="textColor" value="#000000"></label><br/>
-    <label>Ваш ник: <input type="text" id="nickname" placeholder="Введите ваш ник"></label><br/>
-    <label>Описание (опционально): <input type="text" id="description" placeholder="Описание сказки"></label><br/>
+    <label><input type="checkbox" id="randomOrder"> Вопросы в случайном порядке</label><br>
+    <label>Фон: <input type="color" id="bgColor" value="#000000"></label><br>
+    <label>Цвет листка: <input type="color" id="paperColor" value="#ffffff"></label><br>
+    <label>Цвет текста: <input type="color" id="textColor" value="#000000"></label><br>
+    <label>Ник: <input type="text" id="nickname"></label><br>
+    <label>Описание: <input type="text" id="description"></label><br>
     <button class="button" onclick="generateCode()">Готово — получить код</button>
   </div>
 
-  <div id="codeContainer">
-    <textarea id="finalCode" rows="5" readonly></textarea>
+  <div id="codeContainer" style="display:none; margin-top:10px;">
+    <textarea id="saveCode" rows="5" readonly></textarea><br>
     <button class="button" onclick="copyCode()">Скопировать код</button>
   </div>
 
@@ -89,15 +64,15 @@
     function addText() {
       const text = prompt("Введите текст");
       if (text) {
-        storyParts.push({type: 'text', value: text});
+        storyParts.push({ type: 'text', value: text });
         updateStoryParts();
       }
     }
 
     function addNumber() {
-      const number = prompt("Введите число без пробелов");
-      if (number && !number.includes(' ')) {
-        storyParts.push({type: 'number', value: number});
+      const num = prompt("Введите число без пробелов");
+      if (num && !num.includes(" ")) {
+        storyParts.push({ type: 'number', value: num });
         updateStoryParts();
       } else {
         alert("Число не должно содержать пробелов!");
@@ -105,49 +80,44 @@
     }
 
     function updateStoryParts() {
-      const container = document.getElementById("storyParts");
-      container.innerHTML = '';
+      const div = document.getElementById("storyParts");
+      div.innerHTML = "";
       storyParts.forEach((part, index) => {
-        const el = document.createElement("div");
-        el.innerHTML = part.type === 'text' ? 
-          `<span style="color:#00b4d8;">[Текст]</span> ${part.value}` :
-          `<span style="color:red;">[Число]</span> ${part.value}`;
-        el.style.cursor = 'pointer';
-        el.onclick = () => editPart(index);
-        container.appendChild(el);
+        const span = document.createElement("span");
+        span.textContent = (part.type === 'text' ? "[Текст] " : "[Число] ") + part.value;
+        span.style.display = "block";
+        span.style.cursor = "pointer";
+        span.onclick = () => editPart(index);
+        div.appendChild(span);
       });
     }
 
     function editPart(index) {
       const part = storyParts[index];
-      const newValue = prompt("Измените значение", part.value);
-      if (newValue) {
-        if (part.type === 'number' && newValue.includes(' ')) {
+      const newVal = prompt("Изменить значение", part.value);
+      if (newVal) {
+        if (part.type === 'number' && newVal.includes(" ")) {
           alert("Число не должно содержать пробелов!");
           return;
         }
-        part.value = newValue;
+        part.value = newVal;
         updateStoryParts();
       }
     }
 
     function nextStep() {
       questions = [];
-      const container = document.getElementById("questions");
-      container.innerHTML = '';
-      storyParts.filter(p => p.type === 'number').forEach((p) => {
-        const div = document.createElement("div");
-        div.innerHTML = `<label>Вопрос для числа <b>${p.value}</b>: <input type="text" /></label>`;
-        container.appendChild(div);
-        questions.push({num: p.value, question: ''});
+      const qDiv = document.getElementById("questions");
+      qDiv.innerHTML = "";
+      storyParts.filter(p => p.type === 'number').forEach(p => {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = `Вопрос для ${p.value}`;
+        qDiv.appendChild(input);
+        qDiv.appendChild(document.createElement("br"));
+        questions.push({ num: p.value, question: "" });
       });
-      document.getElementById("storyBuilder").style.display = "none";
-      document.getElementById("questionBuilder").style.display = "block";
-    }
-
-    function backToStory() {
-      document.getElementById("questionBuilder").style.display = "none";
-      document.getElementById("storyBuilder").style.display = "block";
+      document.getElementById("questionsContainer").style.display = "block";
     }
 
     function showSettings() {
@@ -155,8 +125,8 @@
       inputs.forEach((input, i) => {
         questions[i].question = input.value || `Вопрос для ${questions[i].num}`;
       });
-      document.getElementById("questionBuilder").style.display = "none";
-      document.getElementById("settings").style.display = "block";
+      document.getElementById("questionsContainer").style.display = "none";
+      document.getElementById("settingsContainer").style.display = "block";
     }
 
     function generateCode() {
@@ -172,14 +142,14 @@
           description: document.getElementById("description").value
         }
       };
-      const jsonString = JSON.stringify(data);
-      const code = btoa(unescape(encodeURIComponent(jsonString)));
-      document.getElementById("finalCode").value = code;
+      const json = JSON.stringify(data);
+      const code = btoa(unescape(encodeURIComponent(json)));
+      document.getElementById("saveCode").value = code;
       document.getElementById("codeContainer").style.display = "block";
     }
 
     function copyCode() {
-      const textarea = document.getElementById("finalCode");
+      const textarea = document.getElementById("saveCode");
       textarea.select();
       document.execCommand("copy");
       alert("Код скопирован!");
