@@ -3,149 +3,249 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Прикольная сказка</title>
+  <title>Генератор сказки</title>
   <style>
     body {
       margin: 0;
       font-family: sans-serif;
-      background: #f5f5f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      background: #0a0a0a;
+      color: #ddd;
     }
-    .container {
-      background: #fff;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 600px;
-      transition: all 0.5s ease;
+    header {
+      background: #003366;
+      padding: 1em;
+      text-align: center;
+      font-size: 1.5em;
+      color: #fff;
     }
-    .question {
-      font-size: 1.2rem;
-      margin-bottom: 1rem;
-    }
-    input {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 1rem;
+    main {
+      padding: 1em;
     }
     button {
-      margin-top: 1rem;
-      padding: 0.7rem 1.5rem;
-      font-size: 1rem;
+      padding: 0.5em 1em;
+      margin: 0.5em;
       border: none;
-      border-radius: 6px;
-      background: #0077ff;
-      color: #fff;
+      border-radius: 4px;
       cursor: pointer;
-      transition: background 0.3s ease;
     }
-    button:hover {
-      background: #005fcc;
+    .btn-main {
+      background: #0055aa;
+      color: #fff;
     }
-    .story {
-      max-height: 400px;
+    .editor, .question-setup, .presentation, .settings {
+      display: none;
+      margin-top: 1em;
+    }
+    #paper {
+      background: #fff;
+      color: #000;
+      padding: 1em;
+      border-radius: 8px;
+      min-height: 200px;
+      max-height: 300px;
       overflow-y: auto;
-      background: #fafafa;
-      padding: 1rem;
-      border-radius: 12px;
-      font-size: 1.2rem;
-      line-height: 1.6;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
     }
-    .fade {
-      opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.5s ease, transform 0.5s ease;
+    .number {
+      color: red;
+      font-weight: bold;
     }
-    .fade.show {
-      opacity: 1;
-      transform: translateY(0);
+    .input-field {
+      display: block;
+      margin: 0.5em 0;
+      padding: 0.5em;
+      width: 100%;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div id="questionBox" class="fade"></div>
-  </div>
+  <header>Генератор сказки</header>
+  <main>
+    <div id="menu">
+      <button class="btn-main" onclick="startEditor()">Создать сказку</button>
+      <button class="btn-main" onclick="loadStory()">Загрузить сказку</button>
+    </div>
+
+    <div class="editor">
+      <div id="paper" onclick="editElement(event)"></div>
+      <button onclick="addText()">Добавить текст</button>
+      <button onclick="addNumber()">Добавить число</button>
+      <button onclick="toQuestions()">Дальше</button>
+    </div>
+
+    <div class="question-setup">
+      <h3>Введите вопросы для переменных:</h3>
+      <div id="questions"></div>
+      <button onclick="backToEditor()">Назад</button>
+      <button onclick="toSettings()">Дальше</button>
+    </div>
+
+    <div class="settings">
+      <h3>Настройки сказки</h3>
+      <label><input type="checkbox" id="randomOrder" /> Вопросы в случайном порядке</label><br>
+      <input class="input-field" id="bgColor" placeholder="Фон (hex)" value="#000000" />
+      <input class="input-field" id="paperColor" placeholder="Цвет листка (hex)" value="#ffffff" />
+      <input class="input-field" id="textColor" placeholder="Цвет текста (hex)" value="#000000" />
+      <input class="input-field" id="nickname" placeholder="Ваш ник" />
+      <textarea class="input-field" id="description" placeholder="Описание (необязательно)"></textarea>
+      <button onclick="generateCode()">Готово</button>
+    </div>
+
+    <div class="presentation">
+      <h3 id="presentNickname"></h3>
+      <p id="presentDescription"></p>
+      <div id="presentPaper" style="padding:1em;border-radius:8px;"></div>
+    </div>
+  </main>
 
   <script>
-    const questions = [
-      { key: 1, text: "Где ты проводишь большую часть времени?" },
-      { key: 2, text: "Любое транспортное средство." },
-      { key: 3, text: "Хороший и знакомый человек." },
-      { key: 4, text: "Какой может быть ребенок?" },
-      { key: 5, text: "Что интересного можно делать вдвоём?" },
-      { key: 6, text: "Что плохого можно сделать у заправки?" },
-      { key: 7, text: "Что с тобой может сделать человек, которого ты знаешь уже долгое время?" },
-      { key: 8, text: "Как бы тебе было, если бы тебя сбросили с небоскреба?" },
-      { key: 9, text: "Предмет, которым пользуешься регулярно." },
-      { key: 11, text: "Что можно найти в подвале?" },
-      { key: 12, text: "Как бы ты себя чувствовал, если бы ты наступил на гвоздь босыми ногами?" },
-      { key: 13, text: "Что можно сделать, чтобы человеку стало легче?" },
-      { key: 14, text: "Если бы ты болел опасной болезнью, а потом вылечился, тебе бы стало..?" },
-      { key: 15, text: "Назови существо, которое обитает только за гаражами и все его боятся?" },
-      { key: 16, text: "Что плохого тебе может дать прохожий?" },
-      { key: 17, text: "Назови любое место, где можно полежать." },
-      { key: 18, text: "Кто может сделать добро?" },
-      { key: 19, text: "Что может сделать друг?" },
-      { key: 20, text: "Что может сделать незнакомец с 5 шприцами?" }
-    ];
+    let storyParts = [];
+    let numbers = [];
+    let questions = {};
 
-    let answers = {};
-    let current = 0;
+    function startEditor() {
+      document.getElementById('menu').style.display = 'none';
+      document.querySelector('.editor').style.display = 'block';
+    }
 
-    const box = document.getElementById('questionBox');
-
-    function showQuestion() {
-      if (current >= questions.length) {
-        showStory();
-        return;
+    function loadStory() {
+      const code = prompt("Вставьте код сказки:");
+      if (code) {
+        try {
+          const data = JSON.parse(atob(code));
+          runTest(data);
+        } catch {
+          alert("Неверный код!");
+        }
       }
-      const q = questions[current];
-      box.innerHTML = `
-        <div class="question">${q.text}</div>
-        <input type="text" id="answer" autofocus />
-        <button onclick="saveAnswer()">Подтвердить</button>
-      `;
-      requestAnimationFrame(() => box.classList.add('show'));
     }
 
-    function saveAnswer() {
-      const input = document.getElementById('answer');
-      if (!input.value.trim()) return;
-      answers[questions[current].key] = input.value.trim();
-      box.classList.remove('show');
-      current++;
-      setTimeout(showQuestion, 300);
+    function addText() {
+      const text = prompt("Введите текст:");
+      if (text) {
+        storyParts.push({ type: "text", value: text });
+        renderStory();
+      }
     }
 
-    function showStory() {
-      const s = answers;
-      box.innerHTML = `
-        <div class="story">
-          Короче, вот причина, как я опоздал в ${s[1]}. Я выходил из транспортного средства под названием ${s[2]}, пока не наткнулся на ${s[3]}. 
-          Этот человек был ${s[4]} и хотел ${s[5]} со мной. 
-          Понятное дело, я согласился. Сначала я решил ${s[6]}, но человеку это не понравилось. 
-          Он решил меня ${s[7]}. Было ${s[8]}, но я убежал. 
-          В итоге я сел на ${s[9]}, но когда прибыл в ${s[1]}, я упал на ${s[11]}, и мне было очень ${s[12]}. 
-          В итоге подошла женщина, чтобы помочь. Мы вместе решили ${s[13]}, и стало ${s[14]}. 
-          Когда я наконец подошел к двери, на меня напал ${s[15]}, а потом я получил ${s[16]} и отключился. 
-          Проснулся я в ${s[17]}, где за мной ухаживал человек - ${s[18]}, который в конце концов ${s[19]} и ${s[20]} меня.
-        </div>
-      `;
-      box.classList.add('show');
+    function addNumber() {
+      const num = numbers.length + 1;
+      storyParts.push({ type: "number", value: num });
+      numbers.push(num);
+      renderStory();
     }
 
-    // Перемешаем вопросы, чтобы порядок был случайным (но key останется)
-    questions.sort(() => Math.random() - 0.5);
+    function renderStory() {
+      const paper = document.getElementById("paper");
+      paper.innerHTML = storyParts.map(part => {
+        if (part.type === "text") {
+          return `<span>${part.value}</span>`;
+        } else {
+          return `<span class="number">{${part.value}}</span>`;
+        }
+      }).join(" ");
+    }
 
-    showQuestion();
+    function editElement(event) {
+      if (event.target.tagName === "SPAN") {
+        const oldText = event.target.textContent;
+        const newText = prompt("Измените текст:", oldText);
+        if (newText !== null) {
+          for (let part of storyParts) {
+            if (part.type === "text" && part.value === oldText) {
+              part.value = newText;
+              break;
+            }
+          }
+          renderStory();
+        }
+      }
+    }
+
+    function toQuestions() {
+      document.querySelector('.editor').style.display = 'none';
+      document.querySelector('.question-setup').style.display = 'block';
+      const qDiv = document.getElementById('questions');
+      qDiv.innerHTML = '';
+      numbers.forEach(num => {
+        qDiv.innerHTML += `<input class="input-field" placeholder="Вопрос для {${num}}" id="q${num}">`;
+      });
+    }
+
+    function backToEditor() {
+      document.querySelector('.question-setup').style.display = 'none';
+      document.querySelector('.editor').style.display = 'block';
+    }
+
+    function toSettings() {
+      numbers.forEach(num => {
+        const qVal = document.getElementById(`q${num}`).value;
+        if (!qVal) {
+          alert(`Заполните вопрос для {${num}}`);
+          throw new Error("Не все вопросы заполнены");
+        }
+        questions[num] = qVal;
+      });
+      document.querySelector('.question-setup').style.display = 'none';
+      document.querySelector('.settings').style.display = 'block';
+    }
+
+    function generateCode() {
+      const data = {
+        storyParts,
+        questions,
+        settings: {
+          randomOrder: document.getElementById('randomOrder').checked,
+          bgColor: document.getElementById('bgColor').value,
+          paperColor: document.getElementById('paperColor').value,
+          textColor: document.getElementById('textColor').value,
+          nickname: document.getElementById('nickname').value,
+          description: document.getElementById('description').value
+        }
+      };
+      const code = btoa(JSON.stringify(data));
+      alert("Ваш код:\n" + code);
+    }
+
+    function runTest(data) {
+      document.getElementById('menu').style.display = 'none';
+      const presentation = document.querySelector('.presentation');
+      presentation.style.display = 'block';
+      document.body.style.background = data.settings.bgColor;
+      const paper = document.getElementById('presentPaper');
+      paper.style.background = data.settings.paperColor;
+      paper.style.color = data.settings.textColor;
+      document.getElementById('presentNickname').textContent = data.settings.nickname || "";
+      document.getElementById('presentDescription').textContent = data.settings.description || "";
+
+      let answers = {};
+      let qNumbers = Object.keys(data.questions);
+      if (data.settings.randomOrder) {
+        qNumbers = qNumbers.sort(() => Math.random() - 0.5);
+      }
+
+      function askNext(index) {
+        if (index >= qNumbers.length) {
+          showStory();
+          return;
+        }
+        const qNum = qNumbers[index];
+        const answer = prompt(data.questions[qNum]);
+        answers[qNum] = answer;
+        askNext(index + 1);
+      }
+
+      function showStory() {
+        paper.innerHTML = data.storyParts.map(part => {
+          if (part.type === "text") {
+            return `<span>${part.value}</span>`;
+          } else {
+            return `<span class="number">${answers[part.value]}</span>`;
+          }
+        }).join(" ");
+      }
+
+      askNext(0);
+    }
   </script>
 </body>
 </html>
